@@ -1,8 +1,5 @@
-package com.example.elderlycare
+package com.example.elderlycare.presentation.auth
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.elderlycare.R
+import com.example.elderlycare.ui.theme.ElderlyCareTheme
 
 // Define color constants
 val PrimaryColor = Color(0xFF1D6A6E)
@@ -26,7 +24,7 @@ val BackgroundBoxColor = Color(0xFFCAE7E5)
 val TextColor = PrimaryColor
 
 @Composable
-fun LandingPage() {
+fun LandingPage(onGetStarted: () -> Unit) {
     Surface(color = Color.White, modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -76,7 +74,7 @@ fun LandingPage() {
 
             // Get Started Button
             Button(
-                onClick = { /* TODO: Navigation */ },
+                onClick = onGetStarted,
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor),
                 shape = RoundedCornerShape(50),
                 modifier = Modifier
@@ -84,7 +82,12 @@ fun LandingPage() {
                     .width(300.dp)
                     .height(70.dp)
             ) {
-                Text(text = "Get Started", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Get Started",
+                    color = Color.White,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
@@ -119,5 +122,7 @@ fun FeatureBox(imageResId: Int, label: String) {
 @Preview(showBackground = true, showSystemUi = false)
 @Composable
 fun LandingPagePreview() {
-    LandingPage()
+    ElderlyCareTheme {
+        LandingPage(onGetStarted = {})
+    }
 }

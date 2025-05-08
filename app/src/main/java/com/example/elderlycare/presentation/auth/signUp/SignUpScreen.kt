@@ -1,75 +1,122 @@
 package com.example.elderlycare.presentation.auth.signup
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.elderlycare.data.model.SignUpRequest
-import com.example.elderlycare.data.repository.UserRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.example.elderlycare.R
+import com.example.elderlycare.ui.theme.*
+import kotlinx.coroutines.flow.collect
+/*import androidx.compose.runtime.livedata.observeAsState*/
+import androidx.compose.runtime.LaunchedEffect
+import com.example.elderlycare.presentation.auth.login.AppTextField
 
-class SignUpScreen : ViewModel() {
 
-    private val repository = UserRepository()
+@Composable
+fun SignUpScreen(
+    navController: NavController,
+    viewModel: SignUpViewModel = viewModel()
+) {
+    val fullName by viewModel.fullName.collectAsState()
+    val email by viewModel.email.collectAsState()
+    val password by viewModel.password.collectAsState()
+    val confirmPassword by viewModel.confirmPassword.collectAsState()
+    val selectedRole by viewModel.selectedRole.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val signUpSuccess by viewModel.signUpSuccess.collectAsState()
 
-    private val _fullName = MutableStateFlow("")
-    val fullName: StateFlow<String> = _fullName
-
-    private val _email = MutableStateFlow("")
-    val email: StateFlow<String> = _email
-
-    private val _password = MutableStateFlow("")
-    val password: StateFlow<String> = _password
-
-    private val _confirmPassword = MutableStateFlow("")
-    val confirmPassword: StateFlow<String> = _confirmPassword
-
-    private val _selectedRole = MutableStateFlow("Care Taker") // Default role
-    val selectedRole: StateFlow<String> = _selectedRole
-
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading
-
-    fun onFullNameChange(value: String) {
-        _fullName.value = value
+    // Navigate on successful signup
+    LaunchedEffect(signUpSuccess) {
+        if (signUpSuccess) {
+            navController.navigate("login") {
+                popUpTo("signup") { inclusive = true }
+            }
+        }
     }
 
-    fun onEmailChange(value: String) {
-        _email.value = value
-    }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BackgroundColor)
+            .padding(20.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.logo),
+            contentDescription = "Logo",
+            modifier = Modifier.size(100.dp)
+        )
 
-    fun onPasswordChange(value: String) {
-        _password.value = value
-    }
+        Spacer(modifier = Modifier.height(16.dp))
 
-    fun onConfirmPasswordChange(value: String) {
-        _confirmPassword.value = value
-    }
+        Text(
+            text = "Create Account",
+            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+            color = PrimaryColor
+        )
 
-    fun onRoleSelected(role: String) {
-        _selectedRole.value = role
-    }
+        Spacer(modifier = Modifier.height(8.dp))
 
-    fun onSignUpClick() {
-        if (password.value != confirmPassword.value) {
-            // TODO: Show password mismatch error
-            return
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            listOf("Care Taker", "Nurse").forEach { role ->
+                Button(
+                    onClick = { viewModel.onRoleSelected(role) },
+                    shape = MaterialTheme.shapes.medium,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (selectedRole == role) PrimaryColor else TextFieldBackground,
+                        contentColor = if (selectedRole == role) ButtonTextColor else TextColor
+                    ),
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp)
+                        .width(160.dp)
+                        .height(55.dp)
+                ) {
+                    Text(role, fontSize = 20.sp)
+                }
+            }
         }
 
-        viewModelScope.launch {
-            _isLoading.value = true
+        Spacer(modifier = Modifier.height(16.dp))
 
-            val request = SignUpRequest(
-                fullName = fullName.value,
-                email = email.value,
-                password = password.value,
-                role = selectedRole.value
-            )
+        AppTextField("Full Name*", fullName) { viewModel.onFullNameChange(it) }
+        AppTextField("Email*", email) { viewModel.onEmailChange(it) }
+        AppTextField("Password*", password, isPassword = true) { viewModel.onPasswordChange(it) }
+        AppTextField("Confirm Password*", confirmPassword, isPassword = true) { viewModel.onConfirmPasswordChange(it) }
 
-            val success = repository.signUp(request)
+        Spacer(modifier = Modifier.height(16.dp))
 
-            // TODO: Show result message or navigate
-            _isLoading.value = false
+        Button(
+            onClick = {
+                viewModel.onSignUpClick()
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            enabled = !isLoading,
+            colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor)
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(color = ButtonTextColor, modifier = Modifier.size(24.dp))
+            } else {
+                Text("Create Account", color = ButtonTextColor)
+            }
         }
+
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }
